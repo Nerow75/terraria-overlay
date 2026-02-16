@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Terraria Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .obs-root {
+            width: 1920px;
+            height: 1080px;
+        }
+
+        .pixel {
+            image-rendering: pixelated;
+        }
+
+        .track {
+            will-change: transform;
+        }
+    </style>
+</head>
+
+<body class="bg-transparent">
+    <div class="obs-root relative overflow-hidden font-mono text-slate-100">
+        <div id="bossToast"
+            class="absolute left-[18px] top-[18px] hidden rounded-2xl border border-emerald-300/40 bg-emerald-500/15 px-4 py-3 text-sm font-bold shadow-[0_10px_26px_rgba(0,0,0,0.35)]">
+            Boss vaincu
+        </div>
+
+        <div id="marqueeBar"
+            class="absolute overflow-hidden rounded-2xl border border-white/15 bg-black/25 backdrop-blur-sm shadow-[0_10px_26px_rgba(0,0,0,0.40)] p-3"
+            style="right: calc(18px + 320px); bottom: calc(18px + 240px + 18px); width: 426px; height: 152px;">
+            <div class="h-full flex flex-col gap-2 min-h-0">
+                <div class="flex items-center justify-between px-1 flex-none">
+                    <div id="marqueeTitle" class="text-[11px] font-extrabold tracking-[0.20em] uppercase text-white/70">BOSS
+                    </div>
+                    <div id="marqueeCount"
+                        class="text-[11px] font-extrabold text-white/70 border border-white/15 bg-black/20 rounded-full px-2 py-0.5">
+                        0/0</div>
+                </div>
+
+                <div class="relative flex-1 min-h-0 overflow-hidden rounded-2xl border border-white/10 bg-black/15">
+                    <div id="trackA"
+                        class="track absolute inset-0 flex items-center gap-4 px-3 py-1 whitespace-nowrap opacity-100 transition-opacity duration-300">
+                    </div>
+                    <div id="trackB"
+                        class="track absolute inset-0 flex items-center gap-4 px-3 py-1 whitespace-nowrap opacity-0 transition-opacity duration-300">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="webcamBox"
+            class="absolute bottom-[18px] rounded-2xl border border-white/15 bg-black/25 backdrop-blur-sm shadow-[0_10px_26px_rgba(0,0,0,0.40)] p-3"
+            style="right: calc(18px + 320px); width:426px; height:240px;">
+            <div class="relative w-full h-full rounded-2xl border border-white/10 bg-black/15 overflow-hidden">
+                <div
+                    class="absolute left-2 top-2 text-[11px] font-extrabold text-white/70 border border-white/10 bg-black/20 rounded-full px-2 py-1">
+                    WEBCAM
+                </div>
+            </div>
+        </div>
+
+        <div id="bottomWrap" class="absolute left-[18px] bottom-[18px] flex items-end gap-3"
+            style="max-width: calc(1920px - 18px - (18px + 320px) - 426px - 60px);">
+
+            <div
+                class="h-16 flex flex-col justify-center rounded-2xl border border-white/15 bg-black/25 backdrop-blur-sm shadow-[0_10px_26px_rgba(0,0,0,0.40)] px-4">
+                <div id="labelText" class="text-[16px] font-extrabold tracking-[0.20em] uppercase whitespace-nowrap">
+                    MASTER MODE
+                </div>
+                <div id="worldSeedText" class="text-[10px] text-white/65 whitespace-nowrap overflow-hidden text-ellipsis">-</div>
+            </div>
+
+            <div
+                class="h-16 flex flex-col justify-center rounded-2xl border border-white/15 bg-black/25 backdrop-blur-sm shadow-[0_10px_26px_rgba(0,0,0,0.40)] px-4 min-w-[160px]">
+                <div class="text-[10px] text-white/70 tracking-[0.18em] uppercase">Morts</div>
+                <div id="deathCount" class="text-[18px] font-extrabold leading-none">-</div>
+            </div>
+
+            <div
+                class="h-16 flex flex-col justify-center rounded-2xl border border-white/15 bg-black/25 backdrop-blur-sm shadow-[0_10px_26px_rgba(0,0,0,0.40)] px-4 min-w-[170px]">
+                <div class="text-[10px] text-white/70 tracking-[0.18em] uppercase">Run Timer</div>
+                <div id="runTimerText" class="text-[18px] font-extrabold leading-none">00:00:00</div>
+            </div>
+
+            <div
+                class="h-16 flex flex-col justify-center rounded-2xl border border-white/15 bg-black/25 backdrop-blur-sm shadow-[0_10px_26px_rgba(0,0,0,0.40)] px-4 min-w-[420px] max-w-[760px] overflow-hidden">
+                <div class="text-[10px] text-white/70 tracking-[0.18em] uppercase">Objectif</div>
+                <div id="goalText"
+                    class="text-[14px] font-extrabold whitespace-nowrap overflow-hidden text-ellipsis leading-none">-
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BOSSES = [
+            { en: "King Slime", fr: "Roi Slime", slug: "king-slime" },
+            { en: "Eye of Cthulhu", fr: "Oeil de Cthulhu", slug: "eye-of-cthulhu" },
+            { en: "Eater of Worlds", fr: "Devoreur des mondes", slug: "eater-of-worlds" },
+            { en: "Brain of Cthulhu", fr: "Cerveau de Cthulhu", slug: "brain-of-cthulhu" },
+            { en: "Queen Bee", fr: "Reine Abeille", slug: "queen-bee" },
+            { en: "Skeletron", fr: "Skeletron", slug: "skeletron" },
+            { en: "Deerclops", fr: "Deerclops", slug: "deerclops" },
+            { en: "Wall of Flesh", fr: "Mur de chair", slug: "wall-of-flesh" },
+            { en: "Queen Slime", fr: "Reine Slime", slug: "queen-slime" },
+            { en: "The Twins", fr: "Les Jumeaux", slug: "the-twins" },
+            { en: "The Destroyer", fr: "Le Destructeur", slug: "the-destroyer" },
+            { en: "Skeletron Prime", fr: "Skeletron Prime", slug: "skeletron-prime" },
+            { en: "Plantera", fr: "Plantera", slug: "plantera" },
+            { en: "Golem", fr: "Golem", slug: "golem" },
+            { en: "Duke Fishron", fr: "Duc Fishron", slug: "duke-fishron" },
+            { en: "Empress of Light", fr: "Imperatrice de lumiere", slug: "empress-of-light" },
+            { en: "Lunatic Cultist", fr: "Cultiste lunatique", slug: "lunatic-cultist" },
+            { en: "Moon Lord", fr: "Seigneur de la lune", slug: "moon-lord" }
+        ];
+
+        const NPCS = [
+            { en: "Guide", fr: "Guide", slug: "npc-guide" },
+            { en: "Merchant", fr: "Marchand", slug: "npc-merchant" },
+            { en: "Nurse", fr: "Infirmiere", slug: "npc-nurse" },
+            { en: "Demolitionist", fr: "Demolisseur", slug: "npc-demolitionist" },
+            { en: "Arms Dealer", fr: "Marchand d'armes", slug: "npc-arms-dealer" },
+            { en: "Dryad", fr: "Dryade", slug: "npc-dryad" },
+            { en: "Goblin Tinkerer", fr: "Bricoleur gobelin", slug: "npc-goblin-tinkerer" },
+            { en: "Mechanic", fr: "Mecanicienne", slug: "npc-mechanic" },
+            { en: "Witch Doctor", fr: "Docteur vaudou", slug: "npc-witch-doctor" },
+            { en: "Clothier", fr: "Tailleur", slug: "npc-clothier" },
+            { en: "Wizard", fr: "Sorcier", slug: "npc-wizard" },
+            { en: "Steampunker", fr: "Steampunker", slug: "npc-steampunker" },
+            { en: "Truffle", fr: "Truffe", slug: "npc-truffle" },
+            { en: "Cyborg", fr: "Cyborg", slug: "npc-cyborg" },
+            { en: "Santa", fr: "Pere Noel", slug: "npc-santa" },
+            { en: "Painter", fr: "Peintre", slug: "npc-painter" },
+            { en: "Angler", fr: "Pecheur", slug: "npc-angler" },
+            { en: "Dye Trader", fr: "Marchand de teintures", slug: "npc-dye-trader" },
+            { en: "Golfer", fr: "Golfeur", slug: "npc-golfer" }
+        ];
+
+        const elLabel = document.getElementById("labelText");
+        const elWorldSeed = document.getElementById("worldSeedText");
+        const elGoal = document.getElementById("goalText");
+        const elDeaths = document.getElementById("deathCount");
+        const elTimer = document.getElementById("runTimerText");
+        const elTitle = document.getElementById("marqueeTitle");
+        const elCount = document.getElementById("marqueeCount");
+        const elBossToast = document.getElementById("bossToast");
+
+        const trackA = document.getElementById("trackA");
+        const trackB = document.getElementById("trackB");
+        const marqueeBar = document.getElementById("marqueeBar");
+        const webcamBox = document.getElementById("webcamBox");
+        const bottomWrap = document.getElementById("bottomWrap");
+
+        let state = null;
+        let marqueeMode = "boss";
+        let lastSwitchAt = 0;
+        let activeTrack = "A";
+        let lastEtag = "";
+        let lastModified = "";
+        let seenLastBossAt = 0;
+        let toastTimeout = null;
+
+        function displayName(it) {
+            const lang = (state && state.language) || "fr";
+            return lang === "en" ? it.en : it.fr;
+        }
+
+        function findBySlug(slug) {
+            return BOSSES.find(x => x.slug === slug) || NPCS.find(x => x.slug === slug) || null;
+        }
+
+        function fmtTime(ms) {
+            const total = Math.floor((ms || 0) / 1000);
+            const h = String(Math.floor(total / 3600)).padStart(2, "0");
+            const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+            const s = String(total % 60).padStart(2, "0");
+            return `${h}:${m}:${s}`;
+        }
+
+        function countDone(list, doneMap) {
+            let c = 0;
+            for (const it of list) if (doneMap && doneMap[it.slug]) c++;
+            return c;
+        }
+
+        function sortNonDoneFirst(list, doneMap) {
+            const notDone = [];
+            const done = [];
+            for (const it of list) {
+                (doneMap && doneMap[it.slug]) ? done.push(it) : notDone.push(it);
+            }
+            return notDone.concat(done);
+        }
+
+        function itemHTML(it, doneMap) {
+            const isDone = !!(doneMap && doneMap[it.slug]);
+            const baseOpacity = isDone ? "opacity-100" : "opacity-55 saturate-75";
+            const border = isDone ? "border-[rgba(108,255,138,0.40)] bg-[rgba(108,255,138,0.14)] shadow-[0_0_12px_rgba(108,255,138,0.25)]"
+                : "border-white/15 bg-black/20";
+            const imgSrc = `icons/${it.slug}.png`;
+            const fullName = displayName(it);
+            const first = (it.en || "?").trim().charAt(0).toUpperCase();
+
+            return `
+                <div class="flex flex-col items-center justify-center gap-1.5 w-[104px] py-1 flex-none ${baseOpacity}">
+                    <div class="w-[64px] h-[64px] rounded-2xl border ${border} overflow-hidden grid place-items-center">
+                        <img class="w-full h-full object-cover pixel" src="${imgSrc}" alt="${fullName}"
+                          onerror="this.remove(); this.parentElement.innerHTML='<div class=&quot;font-extrabold text-[22px] text-white/95&quot;>${first}</div>';">
+                    </div>
+                    <div class="text-[10px] leading-none text-white/80 max-w-[104px] overflow-hidden text-ellipsis whitespace-nowrap text-center" title="${fullName}">
+                        ${fullName}
+                    </div>
+                </div>
+            `;
+        }
+
+        function setDynamicScroll(trackEl, seconds) {
+            requestAnimationFrame(() => {
+                const totalW = trackEl.scrollWidth / 2;
+                const s = Math.max(10, Number(seconds) || 22);
+                const styleId = "dynScrollStyleX";
+                let st = document.getElementById(styleId);
+                if (!st) { st = document.createElement("style"); st.id = styleId; document.head.appendChild(st); }
+                st.textContent = `
+                    @keyframes dynScrollX { from { transform: translateX(0); } to { transform: translateX(-${totalW}px); } }
+                    #trackA, #trackB { animation: dynScrollX ${s}s linear infinite; }
+                `;
+            });
+        }
+
+        function getListForMode(mode) {
+            const listRaw = mode === "npc" ? NPCS : BOSSES;
+            const doneMap = mode === "npc" ? state.doneNpc : state.doneBoss;
+
+            if (mode === "boss" && state.focusNextBoss) {
+                const nextBoss = BOSSES.find((b) => !(doneMap && doneMap[b.slug]));
+                if (nextBoss) return { listRaw, doneMap, list: [nextBoss] };
+            }
+            return { listRaw, doneMap, list: sortNonDoneFirst(listRaw, doneMap) };
+        }
+
+        function renderMarqueeCrossfade(newMode) {
+            if (!state) return;
+            const { listRaw, doneMap, list } = getListForMode(newMode);
+
+            elTitle.textContent = newMode === "npc" ? "NPC" : "BOSS";
+            elCount.textContent = `${countDone(listRaw, doneMap)}/${listRaw.length}`;
+
+            const html = list.map(it => itemHTML(it, doneMap)).join("");
+            const nextTrack = activeTrack === "A" ? trackB : trackA;
+            const curTrack = activeTrack === "A" ? trackA : trackB;
+
+            nextTrack.innerHTML = html + html;
+            nextTrack.classList.remove("opacity-0");
+            nextTrack.classList.add("opacity-100");
+            curTrack.classList.remove("opacity-100");
+            curTrack.classList.add("opacity-0");
+
+            activeTrack = activeTrack === "A" ? "B" : "A";
+            setDynamicScroll(nextTrack, state.scrollSeconds);
+        }
+
+        function applyGutters() {
+            const gutter = Math.max(0, Number(state?.uiRightGutter) || 320);
+            marqueeBar.style.right = `calc(18px + ${gutter}px)`;
+            webcamBox.style.right = `calc(18px + ${gutter}px)`;
+            bottomWrap.style.maxWidth = `calc(1920px - 18px - (18px + ${gutter}px) - 426px - 60px)`;
+        }
+
+        function effectiveMode() {
+            const lock = state?.marqueeModeLock || "auto";
+            if (lock === "boss" || lock === "npc") return lock;
+            return marqueeMode;
+        }
+
+        function tickCycle() {
+            if (!state) return;
+            if ((state.marqueeModeLock || "auto") !== "auto") {
+                const forced = state.marqueeModeLock;
+                if (forced !== marqueeMode) {
+                    marqueeMode = forced;
+                    renderMarqueeCrossfade(marqueeMode);
+                }
+                return;
+            }
+
+            const cycle = Math.max(4, Number(state.cycleSeconds) || 10);
+            const now = Date.now();
+            if (!lastSwitchAt) lastSwitchAt = now;
+            if (now - lastSwitchAt >= cycle * 1000) {
+                marqueeMode = marqueeMode === "boss" ? "npc" : "boss";
+                lastSwitchAt = now;
+                renderMarqueeCrossfade(marqueeMode);
+            }
+        }
+
+        function renderBossToast() {
+            const notif = state?.lastDefeatedBoss;
+            if (!state?.showLastBossNotif || !notif || !notif.at) return;
+            if (notif.at <= seenLastBossAt) return;
+            seenLastBossAt = notif.at;
+
+            const item = findBySlug(notif.slug);
+            const bossName = item ? displayName(item) : (notif.name || notif.slug);
+            elBossToast.textContent = `Boss vaincu: ${bossName}`;
+            elBossToast.classList.remove("hidden");
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                elBossToast.classList.add("hidden");
+            }, 2000);
+        }
+
+        async function fetchState() {
+            try {
+                const headers = {};
+                if (lastEtag) headers["If-None-Match"] = lastEtag;
+                if (lastModified) headers["If-Modified-Since"] = lastModified;
+
+                const res = await fetch("/api/state", { cache: "no-cache", headers });
+                if (res.status === 304) return;
+                if (!res.ok) throw new Error("HTTP " + res.status);
+
+                lastEtag = res.headers.get("ETag") || lastEtag;
+                lastModified = res.headers.get("Last-Modified") || lastModified;
+                state = await res.json();
+
+                elLabel.textContent = (state.label || "MASTER MODE").toUpperCase();
+                elGoal.textContent = (state.goal && state.goal.trim()) ? state.goal.trim() : "-";
+                const d = (state.deaths != null && String(state.deaths).trim() !== "") ? String(state.deaths).trim() : "-";
+                elDeaths.textContent = d;
+                elTimer.textContent = fmtTime(state.runElapsedMs || 0);
+
+                const world = (state.worldName || "").trim();
+                const seed = (state.seed || "").trim();
+                elWorldSeed.textContent = [world && `World: ${world}`, seed && `Seed: ${seed}`].filter(Boolean).join("  |  ") || "-";
+
+                applyGutters();
+                renderBossToast();
+
+                const mode = effectiveMode();
+                if (!lastSwitchAt) {
+                    marqueeMode = mode;
+                    renderMarqueeCrossfade(marqueeMode);
+                    lastSwitchAt = Date.now();
+                } else if (mode !== marqueeMode) {
+                    marqueeMode = mode;
+                    renderMarqueeCrossfade(marqueeMode);
+                } else {
+                    renderMarqueeCrossfade(marqueeMode);
+                }
+            } catch {
+                // keep last render
+            }
+        }
+
+        fetchState();
+        setInterval(fetchState, 1000);
+        setInterval(tickCycle, 250);
+    </script>
+</body>
+
+</html>

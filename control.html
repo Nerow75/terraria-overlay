@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Terraria Overlay Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-neutral-950 text-slate-100 font-mono">
+    <div class="max-w-6xl mx-auto p-4 space-y-4">
+
+        <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4 space-y-3">
+                <div class="text-lg font-extrabold">Config / Settings</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Label / Titre</label>
+                    <input id="label"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
+                        placeholder="MASTER MODE" />
+                </div>
+
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Objectif / Goal</label>
+                    <input id="goal"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
+                        placeholder="Ex: Arena Plantera" />
+                </div>
+
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Monde / World</label>
+                    <input id="worldName"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
+                        placeholder="Monde A" />
+                </div>
+
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Seed</label>
+                    <input id="seed"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
+                        placeholder="123456789" />
+                </div>
+
+                <div class="flex items-end">
+                    <button id="saveBtn"
+                        class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">
+                        Sauvegarder / Save
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Defilement / Scroll (sec)</label>
+                    <input id="scrollSeconds" type="number" min="10" max="120" step="1"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" />
+                </div>
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Cycle auto (sec)</label>
+                    <input id="cycleSeconds" type="number" min="4" max="120" step="1"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" />
+                </div>
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">UI droite / Right UI (px)</label>
+                    <input id="uiRightGutter" type="number" min="0" max="600" step="10"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" />
+                </div>
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Mode marquee</label>
+                    <select id="marqueeModeLock"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none">
+                        <option value="auto">Auto</option>
+                        <option value="boss">Boss</option>
+                        <option value="npc">NPC</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Langue / Language</label>
+                    <select id="language"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none">
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <label class="flex items-end gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2">
+                    <input id="focusNextBoss" type="checkbox" class="accent-emerald-400">
+                    <span class="text-xs">Focus prochain boss / next boss</span>
+                </label>
+                <label class="flex items-end gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2">
+                    <input id="showLastBossNotif" type="checkbox" class="accent-emerald-400">
+                    <span class="text-xs">Notif dernier boss / last boss</span>
+                </label>
+            </div>
+
+            <div id="status" class="text-sm text-white/70">-</div>
+            <div class="text-xs text-white/50">Hotkeys: F1 mode Boss/NPC, F2 focus next boss, F3 +1 mort.</div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4 space-y-2">
+                <div class="text-lg font-extrabold">Actions rapides / Quick actions</div>
+                <button id="quickPreHard"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">All
+                    pre-hardmode done</button>
+                <button id="quickHardmode"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Hardmode
+                    start</button>
+                <button id="quickReset"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Reset
+                    run</button>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4 space-y-2">
+                <div class="text-lg font-extrabold">Run Timer</div>
+                <div id="timerDisplay" class="text-2xl font-extrabold">00:00:00</div>
+                <div class="flex gap-2">
+                    <button id="timerStart"
+                        class="flex-1 rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Start</button>
+                    <button id="timerPause"
+                        class="flex-1 rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Pause</button>
+                    <button id="timerReset"
+                        class="flex-1 rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Reset</button>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4 space-y-2">
+                <div class="text-lg font-extrabold">Import / Export</div>
+                <button id="exportBtn"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Export
+                    JSON</button>
+                <input id="importFile" type="file" accept="application/json" class="hidden" />
+                <button id="importBtn"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Import
+                    JSON</button>
+                <button id="deathIncBtn"
+                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">+1
+                    Mort (manuel)</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4">
+                <div class="text-lg font-extrabold mb-3">Boss vaincus / Defeated</div>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input id="bossSearch"
+                        class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
+                        placeholder="Recherche boss..." />
+                    <select id="bossFilter"
+                        class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none">
+                        <option value="all">Tous</option>
+                        <option value="done">Battus</option>
+                        <option value="todo">Pas battus</option>
+                    </select>
+                </div>
+                <div id="bossGrid" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                <div class="mt-3">
+                    <button id="resetBoss"
+                        class="rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Reset
+                        Boss</button>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4">
+                <div class="text-lg font-extrabold mb-3">NPC presents / Present</div>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input id="npcSearch"
+                        class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
+                        placeholder="Recherche NPC..." />
+                    <select id="npcFilter"
+                        class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none">
+                        <option value="all">Tous</option>
+                        <option value="done">Presents</option>
+                        <option value="todo">Absents</option>
+                    </select>
+                </div>
+                <div id="npcGrid" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                <div class="mt-3">
+                    <button id="resetNpc"
+                        class="rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Reset
+                        NPC</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BOSSES = [
+            { en: "King Slime", fr: "Roi Slime", slug: "king-slime" },
+            { en: "Eye of Cthulhu", fr: "Oeil de Cthulhu", slug: "eye-of-cthulhu" },
+            { en: "Eater of Worlds", fr: "Devoreur des mondes", slug: "eater-of-worlds" },
+            { en: "Brain of Cthulhu", fr: "Cerveau de Cthulhu", slug: "brain-of-cthulhu" },
+            { en: "Queen Bee", fr: "Reine Abeille", slug: "queen-bee" },
+            { en: "Skeletron", fr: "Skeletron", slug: "skeletron" },
+            { en: "Deerclops", fr: "Deerclops", slug: "deerclops" },
+            { en: "Wall of Flesh", fr: "Mur de chair", slug: "wall-of-flesh" },
+            { en: "Queen Slime", fr: "Reine Slime", slug: "queen-slime" },
+            { en: "The Twins", fr: "Les Jumeaux", slug: "the-twins" },
+            { en: "The Destroyer", fr: "Le Destructeur", slug: "the-destroyer" },
+            { en: "Skeletron Prime", fr: "Skeletron Prime", slug: "skeletron-prime" },
+            { en: "Plantera", fr: "Plantera", slug: "plantera" },
+            { en: "Golem", fr: "Golem", slug: "golem" },
+            { en: "Duke Fishron", fr: "Duc Fishron", slug: "duke-fishron" },
+            { en: "Empress of Light", fr: "Imperatrice de lumiere", slug: "empress-of-light" },
+            { en: "Lunatic Cultist", fr: "Cultiste lunatique", slug: "lunatic-cultist" },
+            { en: "Moon Lord", fr: "Seigneur de la lune", slug: "moon-lord" }
+        ];
+
+        const PRE_HARDMODE = BOSSES.slice(0, 8).map(x => x.slug);
+
+        const NPCS = [
+            { en: "Guide", fr: "Guide", slug: "npc-guide" },
+            { en: "Merchant", fr: "Marchand", slug: "npc-merchant" },
+            { en: "Nurse", fr: "Infirmiere", slug: "npc-nurse" },
+            { en: "Demolitionist", fr: "Demolisseur", slug: "npc-demolitionist" },
+            { en: "Arms Dealer", fr: "Marchand d'armes", slug: "npc-arms-dealer" },
+            { en: "Dryad", fr: "Dryade", slug: "npc-dryad" },
+            { en: "Goblin Tinkerer", fr: "Bricoleur gobelin", slug: "npc-goblin-tinkerer" },
+            { en: "Mechanic", fr: "Mecanicienne", slug: "npc-mechanic" },
+            { en: "Witch Doctor", fr: "Docteur vaudou", slug: "npc-witch-doctor" },
+            { en: "Clothier", fr: "Tailleur", slug: "npc-clothier" },
+            { en: "Wizard", fr: "Sorcier", slug: "npc-wizard" },
+            { en: "Steampunker", fr: "Steampunker", slug: "npc-steampunker" },
+            { en: "Truffle", fr: "Truffe", slug: "npc-truffle" },
+            { en: "Cyborg", fr: "Cyborg", slug: "npc-cyborg" },
+            { en: "Santa", fr: "Pere Noel", slug: "npc-santa" },
+            { en: "Painter", fr: "Peintre", slug: "npc-painter" },
+            { en: "Angler", fr: "Pecheur", slug: "npc-angler" },
+            { en: "Dye Trader", fr: "Marchand de teintures", slug: "npc-dye-trader" },
+            { en: "Golfer", fr: "Golfeur", slug: "npc-golfer" }
+        ];
+
+        const elStatus = document.getElementById("status");
+        const elTimerDisplay = document.getElementById("timerDisplay");
+        const elBossGrid = document.getElementById("bossGrid");
+        const elNpcGrid = document.getElementById("npcGrid");
+        const elImportFile = document.getElementById("importFile");
+        const CONFIG_INPUT_IDS = ["label", "goal", "worldName", "seed", "scrollSeconds", "cycleSeconds", "uiRightGutter"];
+
+        let state = null;
+        let configDirty = false;
+
+        function currentLang() {
+            return (state && state.language) || document.getElementById("language").value || "fr";
+        }
+
+        function displayName(it) {
+            return currentLang() === "en" ? it.en : it.fr;
+        }
+
+        function fmtTime(ms) {
+            const total = Math.floor((ms || 0) / 1000);
+            const h = String(Math.floor(total / 3600)).padStart(2, "0");
+            const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+            const s = String(total % 60).padStart(2, "0");
+            return `${h}:${m}:${s}`;
+        }
+
+        async function getState() {
+            const res = await fetch("/api/state", { cache: "no-cache" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            state = await res.json();
+        }
+
+        async function patchState(patch) {
+            const res = await fetch("/api/state", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(patch)
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                throw new Error(data.error || ("HTTP " + res.status));
+            }
+            state = data;
+            elStatus.textContent = "Sauvegarde OK";
+        }
+
+        function filteredList(list, doneMap, searchValue, filterValue) {
+            const q = (searchValue || "").trim().toLowerCase();
+            return list.filter((it) => {
+                const done = !!(doneMap && doneMap[it.slug]);
+                if (filterValue === "done" && !done) return false;
+                if (filterValue === "todo" && done) return false;
+                const fullName = `${it.en} ${it.fr}`.toLowerCase();
+                if (q && !fullName.includes(q)) return false;
+                return true;
+            });
+        }
+
+        function renderChecklist(list, doneMap, container, searchId, filterId, onChange) {
+            const searchValue = document.getElementById(searchId).value;
+            const filterValue = document.getElementById(filterId).value;
+            const rows = filteredList(list, doneMap, searchValue, filterValue);
+
+            container.innerHTML = "";
+            for (const it of rows) {
+                const checked = !!(doneMap && doneMap[it.slug]);
+                const row = document.createElement("label");
+                row.className = "flex items-center gap-3 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2 cursor-pointer";
+                row.innerHTML = `
+                    <input type="checkbox" ${checked ? "checked" : ""} class="scale-125 accent-emerald-400">
+                    <div class="font-bold">${displayName(it)}</div>
+                `;
+                const cb = row.querySelector("input");
+                cb.addEventListener("change", () => onChange(it.slug, cb.checked));
+                container.appendChild(row);
+            }
+
+            if (!rows.length) {
+                const empty = document.createElement("div");
+                empty.className = "text-sm text-white/50 px-1 py-1";
+                empty.textContent = "Aucun resultat";
+                container.appendChild(empty);
+            }
+        }
+
+        function setInputValues() {
+            if (configDirty) return;
+            document.getElementById("label").value = state.label || "";
+            document.getElementById("goal").value = state.goal || "";
+            document.getElementById("worldName").value = state.worldName || "";
+            document.getElementById("seed").value = state.seed || "";
+            document.getElementById("scrollSeconds").value = String(state.scrollSeconds ?? 22);
+            document.getElementById("cycleSeconds").value = String(state.cycleSeconds ?? 10);
+            document.getElementById("uiRightGutter").value = String(state.uiRightGutter ?? 320);
+            document.getElementById("focusNextBoss").checked = !!state.focusNextBoss;
+            document.getElementById("showLastBossNotif").checked = state.showLastBossNotif !== false;
+            document.getElementById("marqueeModeLock").value = state.marqueeModeLock || "auto";
+            document.getElementById("language").value = state.language || "fr";
+        }
+
+        function render() {
+            setInputValues();
+            elTimerDisplay.textContent = fmtTime(state.runElapsedMs || 0);
+
+            renderChecklist(BOSSES, state.doneBoss || {}, elBossGrid, "bossSearch", "bossFilter", async (slug, checked) => {
+                const doneBoss = { ...(state.doneBoss || {}), [slug]: checked };
+                await patchState({ doneBoss });
+                render();
+            });
+
+            renderChecklist(NPCS, state.doneNpc || {}, elNpcGrid, "npcSearch", "npcFilter", async (slug, checked) => {
+                const doneNpc = { ...(state.doneNpc || {}), [slug]: checked };
+                await patchState({ doneNpc });
+                render();
+            });
+        }
+
+        async function saveConfig() {
+            await patchState({
+                label: document.getElementById("label").value,
+                goal: document.getElementById("goal").value,
+                worldName: document.getElementById("worldName").value,
+                seed: document.getElementById("seed").value,
+                language: document.getElementById("language").value,
+                scrollSeconds: parseInt(document.getElementById("scrollSeconds").value, 10) || 22,
+                cycleSeconds: parseInt(document.getElementById("cycleSeconds").value, 10) || 10,
+                uiRightGutter: parseInt(document.getElementById("uiRightGutter").value, 10) || 320,
+                focusNextBoss: document.getElementById("focusNextBoss").checked,
+                showLastBossNotif: document.getElementById("showLastBossNotif").checked,
+                marqueeModeLock: document.getElementById("marqueeModeLock").value
+            });
+            configDirty = false;
+            render();
+        }
+
+        async function quickPreHardmode() {
+            const doneBoss = { ...(state.doneBoss || {}) };
+            for (const slug of PRE_HARDMODE) doneBoss[slug] = true;
+            await patchState({ doneBoss });
+            render();
+        }
+
+        async function quickHardmodeStart() {
+            const doneBoss = {};
+            for (const slug of PRE_HARDMODE) doneBoss[slug] = true;
+            for (const b of BOSSES) {
+                if (!PRE_HARDMODE.includes(b.slug)) doneBoss[b.slug] = false;
+            }
+            await patchState({ doneBoss });
+            render();
+        }
+
+        async function quickResetRun() {
+            await patchState({
+                doneBoss: {},
+                doneNpc: {},
+                goal: "",
+                timerCmd: "reset",
+                deathsOp: "reset",
+                marqueeModeLock: "auto",
+                focusNextBoss: false
+            });
+            configDirty = false;
+            render();
+        }
+
+        function exportState() {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "state-export.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function importStateFromFile(file) {
+            const txt = await file.text();
+            const parsed = JSON.parse(txt);
+            if (!parsed || typeof parsed !== "object") throw new Error("JSON invalide");
+
+            const patch = {};
+            const keys = [
+                "label", "goal", "worldName", "seed", "scrollSeconds", "cycleSeconds",
+                "uiRightGutter", "language", "focusNextBoss", "marqueeModeLock", "showLastBossNotif",
+                "doneBoss", "doneNpc"
+            ];
+            for (const k of keys) {
+                if (k in parsed) patch[k] = parsed[k];
+            }
+            await patchState(patch);
+            render();
+        }
+
+        function isFormTarget(target) {
+            const tag = (target && target.tagName || "").toLowerCase();
+            return tag === "input" || tag === "textarea" || tag === "select";
+        }
+
+        document.getElementById("saveBtn").addEventListener("click", saveConfig);
+        document.getElementById("resetBoss").addEventListener("click", async () => { await patchState({ doneBoss: {} }); render(); });
+        document.getElementById("resetNpc").addEventListener("click", async () => { await patchState({ doneNpc: {} }); render(); });
+        document.getElementById("quickPreHard").addEventListener("click", quickPreHardmode);
+        document.getElementById("quickHardmode").addEventListener("click", quickHardmodeStart);
+        document.getElementById("quickReset").addEventListener("click", quickResetRun);
+        document.getElementById("timerStart").addEventListener("click", async () => { await patchState({ timerCmd: "start" }); render(); });
+        document.getElementById("timerPause").addEventListener("click", async () => { await patchState({ timerCmd: "pause" }); render(); });
+        document.getElementById("timerReset").addEventListener("click", async () => { await patchState({ timerCmd: "reset" }); render(); });
+        document.getElementById("deathIncBtn").addEventListener("click", async () => { await patchState({ deathsOp: "inc" }); render(); });
+        document.getElementById("exportBtn").addEventListener("click", exportState);
+        document.getElementById("importBtn").addEventListener("click", () => elImportFile.click());
+
+        elImportFile.addEventListener("change", async () => {
+            if (!elImportFile.files || !elImportFile.files.length) return;
+            try {
+                await importStateFromFile(elImportFile.files[0]);
+                elStatus.textContent = "Import OK";
+            } catch (e) {
+                elStatus.textContent = "Import erreur: " + (e.message || e);
+            } finally {
+                elImportFile.value = "";
+            }
+        });
+
+        ["bossSearch", "bossFilter", "npcSearch", "npcFilter"].forEach((id) => {
+            document.getElementById(id).addEventListener("input", render);
+            document.getElementById(id).addEventListener("change", render);
+        });
+
+        ["focusNextBoss", "showLastBossNotif", "marqueeModeLock", "language"].forEach((id) => {
+            document.getElementById(id).addEventListener("change", saveConfig);
+        });
+
+        CONFIG_INPUT_IDS.forEach((id) => {
+            document.getElementById(id).addEventListener("input", () => {
+                configDirty = true;
+            });
+        });
+
+        document.addEventListener("keydown", async (e) => {
+            if (isFormTarget(e.target)) return;
+            if (e.key === "F1") {
+                e.preventDefault();
+                const current = state.marqueeModeLock || "auto";
+                const next = current === "boss" ? "npc" : "boss";
+                await patchState({ marqueeModeLock: next });
+                render();
+            } else if (e.key === "F2") {
+                e.preventDefault();
+                await patchState({ focusNextBoss: !state.focusNextBoss });
+                render();
+            } else if (e.key === "F3") {
+                e.preventDefault();
+                await patchState({ deathsOp: "inc" });
+                render();
+            }
+        });
+
+        (async () => {
+            try {
+                await getState();
+                render();
+                elStatus.textContent = "Pret";
+            } catch (e) {
+                elStatus.textContent = "Erreur init: " + (e.message || e);
+            }
+            setInterval(async () => {
+                try {
+                    await getState();
+                    render();
+                } catch {
+                    // keep current UI
+                }
+            }, 1000);
+        })();
+    </script>
+</body>
+
+</html>
