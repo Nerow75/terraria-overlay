@@ -1,34 +1,36 @@
 {
   "label": "MASTER MODE",
-  "goal": "Faire une maison",
+  "goal": "Tuer un boss",
   "worldName": "testmonde",
   "seed": "12346478",
-  "scrollSeconds": 22,
+  "scrollSeconds": 50,
   "cycleSeconds": 10,
   "uiRightGutter": 320,
   "focusNextBoss": false,
   "marqueeModeLock": "auto",
   "showLastBossNotif": true,
   "doneBoss": {
-    "lunatic-cultist": true,
-    "duke-fishron": true,
-    "plantera": true,
-    "the-destroyer": true,
-    "queen-slime": true,
-    "deerclops": true,
-    "queen-bee": true,
-    "eater-of-worlds": true,
-    "king-slime": true
+    "eye-of-cthulhu": true,
+    "king-slime": true,
+    "eater-of-worlds": true
   },
   "doneNpc": {
     "npc-dryad": true,
     "npc-arms-dealer": true,
-    "npc-witch-doctor": true
+    "npc-witch-doctor": true,
+    "npc-guide": true,
+    "npc-merchant": true,
+    "npc-nurse": true,
+    "npc-demolitionist": true
   },
   "runTimer": {
     "running": false,
     "elapsedMs": 653351,
     "startedAt": null
   },
-  "lastDefeatedBoss": null
+  "lastDefeatedBoss": {
+    "slug": "eater-of-worlds",
+    "name": "Eater of Worlds",
+    "at": 1771275052308
+  }
 }

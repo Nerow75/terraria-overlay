@@ -6,6 +6,7 @@ from collections import defaultdict, deque
 from email.utils import formatdate, parsedate_to_datetime
 from hashlib import sha1
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from urllib.parse import urlsplit
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("OVERLAY_PORT", "8787"))
@@ -66,9 +67,136 @@ REQUEST_LOG = defaultdict(deque)
 _last_deaths_read = 0.0
 _last_deaths_val = "-"
 
+LABEL_MAX_LEN = 80
+GOAL_MAX_LEN = 180
+WORLD_MAX_LEN = 80
+SEED_MAX_LEN = 80
+MIN_SCROLL_SECONDS = 10
+MAX_SCROLL_SECONDS = 120
+MIN_CYCLE_SECONDS = 4
+MAX_CYCLE_SECONDS = 120
+MIN_UI_RIGHT_GUTTER = 0
+MAX_UI_RIGHT_GUTTER = 600
+MAX_TRACKED_FLAGS = 128
+ALLOWED_LANGUAGES = {"fr", "en"}
+ALLOWED_MARQUEE_MODES = {"auto", "boss", "npc"}
+ALLOWED_TIMER_CMDS = {"start", "pause", "reset"}
+ALLOWED_DEATHS_OPS = {"inc", "reset"}
+
 
 def now_ms() -> int:
     return int(time.time() * 1000)
+
+
+def _as_trimmed_text(value, max_len: int) -> str:
+    txt = str(value).strip()
+    return txt[:max_len]
+
+
+def _as_int_clamped(value, minimum: int, maximum: int):
+    try:
+        parsed = int(value)
+    except Exception:
+        return None
+    return max(minimum, min(maximum, parsed))
+
+
+def _normalize_bool_map(value):
+    if not isinstance(value, dict):
+        return None
+    out = {}
+    for k, v in value.items():
+        if len(out) >= MAX_TRACKED_FLAGS:
+            break
+        key = str(k).strip()
+        if not key:
+            continue
+        out[key] = bool(v)
+    return out
+
+
+def validate_patch_input(patch: dict):
+    if not isinstance(patch, dict):
+        raise ValueError("patch must be object")
+
+    cleaned = {}
+
+    if "label" in patch:
+        cleaned["label"] = _as_trimmed_text(patch["label"], LABEL_MAX_LEN)
+    if "goal" in patch:
+        cleaned["goal"] = _as_trimmed_text(patch["goal"], GOAL_MAX_LEN)
+    if "worldName" in patch:
+        cleaned["worldName"] = _as_trimmed_text(patch["worldName"], WORLD_MAX_LEN)
+    if "seed" in patch:
+        cleaned["seed"] = _as_trimmed_text(patch["seed"], SEED_MAX_LEN)
+
+    if "language" in patch:
+        lang = str(patch["language"]).strip().lower()
+        if lang in ALLOWED_LANGUAGES:
+            cleaned["language"] = lang
+        else:
+            raise ValueError("invalid language")
+
+    if "scrollSeconds" in patch:
+        val = _as_int_clamped(patch["scrollSeconds"], MIN_SCROLL_SECONDS, MAX_SCROLL_SECONDS)
+        if val is None:
+            raise ValueError("invalid scrollSeconds")
+        cleaned["scrollSeconds"] = val
+
+    if "cycleSeconds" in patch:
+        val = _as_int_clamped(patch["cycleSeconds"], MIN_CYCLE_SECONDS, MAX_CYCLE_SECONDS)
+        if val is None:
+            raise ValueError("invalid cycleSeconds")
+        cleaned["cycleSeconds"] = val
+
+    if "uiRightGutter" in patch:
+        val = _as_int_clamped(patch["uiRightGutter"], MIN_UI_RIGHT_GUTTER, MAX_UI_RIGHT_GUTTER)
+        if val is None:
+            raise ValueError("invalid uiRightGutter")
+        cleaned["uiRightGutter"] = val
+
+    if "focusNextBoss" in patch:
+        cleaned["focusNextBoss"] = bool(patch["focusNextBoss"])
+
+    if "showLastBossNotif" in patch:
+        cleaned["showLastBossNotif"] = bool(patch["showLastBossNotif"])
+
+    if "marqueeModeLock" in patch:
+        mode = str(patch["marqueeModeLock"]).strip().lower()
+        if mode in ALLOWED_MARQUEE_MODES:
+            cleaned["marqueeModeLock"] = mode
+        else:
+            raise ValueError("invalid marqueeModeLock")
+
+    if "doneBoss" in patch:
+        norm = _normalize_bool_map(patch["doneBoss"])
+        if norm is None:
+            raise ValueError("invalid doneBoss")
+        cleaned["doneBoss"] = norm
+
+    if "doneNpc" in patch:
+        norm = _normalize_bool_map(patch["doneNpc"])
+        if norm is None:
+            raise ValueError("invalid doneNpc")
+        cleaned["doneNpc"] = norm
+
+    timer_cmd = None
+    if "timerCmd" in patch:
+        cmd = str(patch["timerCmd"]).strip().lower()
+        if cmd in ALLOWED_TIMER_CMDS:
+            timer_cmd = cmd
+        else:
+            raise ValueError("invalid timerCmd")
+
+    deaths_op = None
+    if "deathsOp" in patch:
+        op = str(patch["deathsOp"]).strip().lower()
+        if op in ALLOWED_DEATHS_OPS:
+            deaths_op = op
+        else:
+            raise ValueError("invalid deathsOp")
+
+    return cleaned, timer_cmd, deaths_op
 
 
 def ensure_run_timer(state: dict) -> dict:
@@ -187,6 +315,9 @@ def parse_http_date(value: str):
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def _path(self) -> str:
+        return urlsplit(self.path).path
+
     def _send_json(self, payload: dict, code: int = 200, extra_headers: dict | None = None):
         raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
@@ -208,7 +339,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.startswith("/api/state"):
+        if self._path() == "/api/state":
             payload = build_public_state()
             etag = etag_for_payload(payload)
             lm_epoch = state_last_modified_epoch()
@@ -218,7 +349,7 @@ class Handler(SimpleHTTPRequestHandler):
             ims = (self.headers.get("If-Modified-Since") or "").strip()
 
             not_modified = False
-            # RFC behavior: If-None-Match has precedence over If-Modified-Since.
+            # Regle: If-None-Match est prioritaire; If-Modified-Since sert de repli.
             if inm:
                 not_modified = (inm == etag or inm == "*")
             elif ims:
@@ -236,46 +367,33 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
 
     def do_POST(self):
-        if self.path.startswith("/api/state"):
+        if self._path() == "/api/state":
             client_ip = self.client_address[0] if self.client_address else "unknown"
             if not check_rate_limit(client_ip):
                 self._send_json({"error": "rate_limited"}, code=429, extra_headers={"Retry-After": "1"})
+                return
+
+            ctype = (self.headers.get("Content-Type") or "").lower()
+            if "application/json" not in ctype:
+                self._send_json({"error": "content_type_must_be_application_json"}, code=415)
                 return
 
             try:
                 length = int(self.headers.get("Content-Length", "0"))
                 body = self.rfile.read(length) if length > 0 else b"{}"
                 patch = json.loads(body.decode("utf-8"))
-                if not isinstance(patch, dict):
-                    raise ValueError("patch must be object")
+                cleaned, timer_cmd, deaths_op = validate_patch_input(patch)
 
                 with STATE_LOCK:
                     state = load_state()
                     prev_done_boss = dict(state.get("doneBoss") or {})
 
-                    allowed = {
-                        "label",
-                        "goal",
-                        "worldName",
-                        "seed",
-                        "language",
-                        "scrollSeconds",
-                        "cycleSeconds",
-                        "uiRightGutter",
-                        "focusNextBoss",
-                        "marqueeModeLock",
-                        "showLastBossNotif",
-                        "doneBoss",
-                        "doneNpc",
-                    }
-                    for k, v in patch.items():
-                        if k in allowed:
-                            state[k] = v
+                    for k, v in cleaned.items():
+                        state[k] = v
 
                     ensure_run_timer(state)
 
-                    timer_cmd = patch.get("timerCmd")
-                    if timer_cmd in {"start", "pause", "reset"}:
+                    if timer_cmd:
                         rt = state["runTimer"]
                         tnow = now_ms()
                         if timer_cmd == "start":
@@ -294,8 +412,7 @@ class Handler(SimpleHTTPRequestHandler):
                             else:
                                 rt["startedAt"] = None
 
-                    deaths_op = patch.get("deathsOp")
-                    if deaths_op in {"inc", "reset"}:
+                    if deaths_op:
                         cur_raw = read_deaths()
                         try:
                             cur_num = int(cur_raw)

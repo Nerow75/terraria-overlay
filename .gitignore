@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+state.json
+deaths.txt
+*.tmp

@@ -24,7 +24,8 @@ if ([string]::IsNullOrWhiteSpace($OverlayDir)) { $OverlayDir = (Get-Location).Pa
 $playerName = Read-Host "Nom EXACT du personnage Terraria (ex: Elias)"
 if ([string]::IsNullOrWhiteSpace($playerName)) { Err "Nom du personnage vide."; exit 1 }
 
-$deathSource = "C:\Users\Admin\Documents\My Games\Terraria\tModLoader\Death Counter\$playerName.txt"
+$documentsDir = [Environment]::GetFolderPath("MyDocuments")
+$deathSource = Join-Path $documentsDir "My Games\Terraria\tModLoader\Death Counter\$playerName.txt"
 $deathDest   = Join-Path $OverlayDir "deaths.txt"
 
 # Required files
@@ -115,8 +116,8 @@ try {
       if (Test-Path -Path $deathSource) {
         $content = Get-Content -Path $deathSource -Raw -ErrorAction Stop
         if ($content -ne $lastContent) {
-          # Keep it simple: write as ASCII
-          Set-Content -Path $deathDest -Value $content -NoNewline -Encoding ASCII
+          # Ecriture UTF-8 pour conserver les caracteres eventuels.
+          Set-Content -Path $deathDest -Value $content -NoNewline -Encoding UTF8
           $lastContent = $content
         }
       } else {
