@@ -46,6 +46,28 @@ try {
 } catch {}
 if (-not $python) { Err "Python introuvable. Installe Python 3 (Add to PATH)."; exit 1 }
 
+$pythonExe = $python.Source
+$pythonArgsPrefix = @()
+if (((Split-Path $pythonExe -Leaf).ToLower()) -eq "py.exe") {
+  $pythonArgsPrefix = @("-3")
+}
+
+try {
+  $verOut = & $pythonExe @pythonArgsPrefix --version 2>&1
+  if ($LASTEXITCODE -ne 0) { throw "Version Python non lisible." }
+  if ($verOut -notmatch "Python\s+(\d+)\.(\d+)") { throw "Version Python invalide: $verOut" }
+  $pyMajor = [int]$matches[1]
+  $pyMinor = [int]$matches[2]
+  if (($pyMajor -lt 3) -or ($pyMajor -eq 3 -and $pyMinor -lt 10)) {
+    Err "Python 3.10+ requis. Version detectee: $verOut"
+    exit 1
+  }
+  Info "Python OK: $verOut"
+} catch {
+  Err "Verification Python impossible: $($_.Exception.Message)"
+  exit 1
+}
+
 Info "OverlayDir  : $OverlayDir"
 Info "DeathSource : $deathSource"
 Info "DeathDest   : $deathDest"
@@ -66,26 +88,56 @@ $portsToTry = @(8787, 18080, 5500, 3000, 8888, 9000)
 
 $serverProc = $null
 $portUsed   = $null
+$serverOutLog = Join-Path $OverlayDir "server.stdout.log"
+$serverErrLog = Join-Path $OverlayDir "server.stderr.log"
+
+try { if (Test-Path $serverOutLog) { Remove-Item $serverOutLog -Force } } catch {}
+try { if (Test-Path $serverErrLog) { Remove-Item $serverErrLog -Force } } catch {}
 
 foreach ($p in $portsToTry) {
   try {
-    Info "Tentative dÃ©marrage server.py sur port $p..."
+    Info "Tentative demarrage server.py sur port $p..."
     $env:OVERLAY_PORT = "$p"
 
-    $serverProc = Start-Process -PassThru `
-      -FilePath $python.Source `
-      -ArgumentList @($serverPy) `
-      -WorkingDirectory $OverlayDir
+    $pythonArgs = @()
+    $pythonArgs += $pythonArgsPrefix
+    $pythonArgs += @($serverPy)
 
-    Start-Sleep -Milliseconds 900
+    $serverProc = Start-Process -PassThru `
+      -FilePath $pythonExe `
+      -ArgumentList $pythonArgs `
+      -WorkingDirectory $OverlayDir `
+      -RedirectStandardOutput $serverOutLog `
+      -RedirectStandardError $serverErrLog
 
     $ok = $false
-    try {
-      $tnc = Test-NetConnection -ComputerName "127.0.0.1" -Port $p -WarningAction SilentlyContinue
-      $ok = $tnc.TcpTestSucceeded
-    } catch {}
+    for ($try = 0; $try -lt 8; $try++) {
+      Start-Sleep -Milliseconds 350
+
+      if ($serverProc.HasExited) { break }
+
+      try {
+        $resp = Invoke-WebRequest -Uri "http://127.0.0.1:$p/api/state" -UseBasicParsing -TimeoutSec 1
+        if ($resp.StatusCode -ge 200 -and $resp.StatusCode -lt 500) {
+          $ok = $true
+          break
+        }
+      } catch {
+        # wait
+      }
+    }
 
     if ($ok) { $portUsed = $p; break }
+
+    if ($serverProc -and $serverProc.HasExited) {
+      $errTail = ""
+      try { if (Test-Path $serverErrLog) { $errTail = (Get-Content $serverErrLog -Tail 8 -ErrorAction SilentlyContinue) -join " | " } } catch {}
+      if (-not [string]::IsNullOrWhiteSpace($errTail)) {
+        Warn "server.py a quitte juste apres demarrage: $errTail"
+      } else {
+        Warn "server.py a quitte juste apres demarrage sans log stderr."
+      }
+    }
 
     # Not ok -> stop and try next port
     try { Stop-Process -Id $serverProc.Id -Force } catch {}
@@ -98,8 +150,16 @@ foreach ($p in $portsToTry) {
 }
 
 if (-not $portUsed) {
-  Err "Impossible de dÃ©marrer server.py. Un antivirus/politique Windows bloque les ports."
-  Err "Essaie PowerShell en admin ou autorise python dans le pare-feu."
+  Err "Impossible de demarrer server.py sur tous les ports testes."
+  if (Test-Path $serverErrLog) {
+    Warn "Voir details dans: $serverErrLog"
+    try {
+      $tail = Get-Content $serverErrLog -Tail 20 -ErrorAction SilentlyContinue
+      if ($tail) { Warn ("Dernieres lignes stderr: " + ($tail -join " | ")) }
+    } catch {}
+  } else {
+    Warn "Aucun log stderr genere."
+  }
   exit 1
 }
 
