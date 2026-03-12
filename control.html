@@ -14,7 +14,7 @@
         <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4 space-y-3">
                 <div class="text-lg font-extrabold">Config / Settings</div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
                 <div>
                     <label class="text-xs text-white/70 tracking-widest uppercase">Label / Titre</label>
                     <input id="label"
@@ -30,10 +30,19 @@
                 </div>
 
                 <div>
-                    <label class="text-xs text-white/70 tracking-widest uppercase">Monde / World</label>
-                    <input id="worldName"
-                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none"
-                        placeholder="Monde A" />
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Perso fichier / Player</label>
+                    <select id="selectedPlayerFile"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none">
+                        <option value="">Chargement...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs text-white/70 tracking-widest uppercase">Monde fichier / World</label>
+                    <select id="selectedWorldFile"
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none">
+                        <option value="">Chargement...</option>
+                    </select>
                 </div>
 
                 <div>
@@ -95,7 +104,76 @@
             </div>
 
             <div id="status" class="text-sm text-white/70">-</div>
-            <div class="text-xs text-white/50">Hotkeys: F1 mode Boss/NPC, F2 focus next boss, F3 +1 mort.</div>
+            <div class="text-xs text-white/50">Hotkeys: F1 mode Boss/NPC, F2 focus next boss.</div>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-neutral-900/60 p-4 space-y-4">
+            <div class="text-lg font-extrabold">Ilots overlay</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2">
+                    <input id="antiSpoilCarousel" type="checkbox" class="accent-emerald-400">
+                    <span class="text-xs">Carrousel anti-spoil (coches seulement)</span>
+                </label>
+                <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2">
+                    <input id="syncRunTimerWithSave" type="checkbox" class="accent-emerald-400">
+                    <span class="text-xs">Timer cale sur le temps de jeu du perso</span>
+                </label>
+                <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2">
+                    <input id="layoutEditMode" type="checkbox" class="accent-emerald-400">
+                    <span class="text-xs">Deplacement live dans l'overlay</span>
+                </label>
+                <button id="resetLayoutBtn"
+                    class="rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">
+                    Reinitialiser positions
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <div class="text-xs text-white/70 tracking-widest uppercase">Visibilite des ilots</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visBossToast" type="checkbox" class="accent-emerald-400"><span class="text-xs">Notification boss</span></label>
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visMarqueeBar" type="checkbox" class="accent-emerald-400"><span class="text-xs">Carrousel boss/NPC</span></label>
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visWebcamBox" type="checkbox" class="accent-emerald-400"><span class="text-xs">Cadre webcam</span></label>
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visSessionCard" type="checkbox" class="accent-emerald-400"><span class="text-xs">Carte session</span></label>
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visBottomLabelCard" type="checkbox" class="accent-emerald-400"><span class="text-xs">Carte label/seed</span></label>
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visBottomTimerCard" type="checkbox" class="accent-emerald-400"><span class="text-xs">Carte timer run</span></label>
+                    <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2"><input id="visBottomGoalCard" type="checkbox" class="accent-emerald-400"><span class="text-xs">Carte objectif</span></label>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="text-xs text-white/70 tracking-widest uppercase">Offsets X/Y (pixels)</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <div class="rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2 space-y-1">
+                        <div class="text-xs text-white/70 uppercase">Carrousel</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="offset_marqueeBar_x" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="X">
+                            <input id="offset_marqueeBar_y" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="Y">
+                        </div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2 space-y-1">
+                        <div class="text-xs text-white/70 uppercase">Webcam</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="offset_webcamBox_x" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="X">
+                            <input id="offset_webcamBox_y" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="Y">
+                        </div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2 space-y-1">
+                        <div class="text-xs text-white/70 uppercase">Session</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="offset_sessionCard_x" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="X">
+                            <input id="offset_sessionCard_y" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="Y">
+                        </div>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-neutral-950/40 px-3 py-2 space-y-1">
+                        <div class="text-xs text-white/70 uppercase">Bas de l'ecran</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="offset_bottomWrap_x" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="X">
+                            <input id="offset_bottomWrap_y" type="number" min="-2200" max="2200" step="1" class="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 outline-none" placeholder="Y">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -134,9 +212,6 @@
                 <button id="importBtn"
                     class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">Import
                     JSON</button>
-                <button id="deathIncBtn"
-                    class="w-full rounded-xl border border-white/10 bg-neutral-950/50 px-3 py-2 hover:bg-neutral-950/70">+1
-                    Mort (manuel)</button>
             </div>
         </div>
 
@@ -236,9 +311,59 @@
         const elBossGrid = document.getElementById("bossGrid");
         const elNpcGrid = document.getElementById("npcGrid");
         const elImportFile = document.getElementById("importFile");
-        const CONFIG_INPUT_IDS = ["label", "goal", "worldName", "seed", "scrollSeconds", "cycleSeconds", "uiRightGutter"];
+        const elPlayerFile = document.getElementById("selectedPlayerFile");
+        const elWorldFile = document.getElementById("selectedWorldFile");
+        const CONFIG_INPUT_IDS = ["label", "goal", "seed", "scrollSeconds", "cycleSeconds", "uiRightGutter"];
+        const OFFSET_LIMIT = 2200;
+
+        const ISLAND_VISIBILITY_INPUTS = [
+            { key: "bossToast", id: "visBossToast" },
+            { key: "marqueeBar", id: "visMarqueeBar" },
+            { key: "webcamBox", id: "visWebcamBox" },
+            { key: "sessionCard", id: "visSessionCard" },
+            { key: "bottomLabelCard", id: "visBottomLabelCard" },
+            { key: "bottomTimerCard", id: "visBottomTimerCard" },
+            { key: "bottomGoalCard", id: "visBottomGoalCard" }
+        ];
+
+        const LAYOUT_OFFSET_INPUTS = [
+            { key: "marqueeBar", xId: "offset_marqueeBar_x", yId: "offset_marqueeBar_y" },
+            { key: "webcamBox", xId: "offset_webcamBox_x", yId: "offset_webcamBox_y" },
+            { key: "sessionCard", xId: "offset_sessionCard_x", yId: "offset_sessionCard_y" },
+            { key: "bottomWrap", xId: "offset_bottomWrap_x", yId: "offset_bottomWrap_y" }
+        ];
+
+        const LIMITS = {
+            scrollMin: 10,
+            scrollMax: 120,
+            cycleMin: 4,
+            cycleMax: 120,
+            gutterMin: 0,
+            gutterMax: 600
+        };
+
+        const API_ERROR_MESSAGES = {
+            rate_limited: "Trop de requetes. Reessaye dans quelques secondes.",
+            content_type_must_be_application_json: "Erreur de format de requete (JSON requis).",
+            invalid_json: "JSON invalide.",
+            patch_must_be_object: "Le patch doit etre un objet JSON.",
+            invalid_language: "Langue invalide.",
+            invalid_scroll_seconds: "Scroll invalide (10 a 120).",
+            invalid_cycle_seconds: "Cycle invalide (4 a 120).",
+            invalid_ui_right_gutter: "UI droite invalide (0 a 600).",
+            invalid_marquee_mode_lock: "Mode marquee invalide.",
+            invalid_done_boss: "Etat boss invalide.",
+            invalid_done_npc: "Etat NPC invalide.",
+            invalid_island_visibility: "Visibilite des ilots invalide.",
+            invalid_layout_offsets: "Offsets des ilots invalides.",
+            invalid_timer_cmd: "Commande timer invalide.",
+            invalid_deaths_op: "Commande deaths invalide.",
+            invalid_request: "Requete invalide.",
+            internal_error: "Erreur interne serveur."
+        };
 
         let state = null;
+        let terrariaState = null;
         let configDirty = false;
 
         function currentLang() {
@@ -257,10 +382,142 @@
             return `${h}:${m}:${s}`;
         }
 
+        function setStatus(message, level = "info") {
+            elStatus.textContent = message;
+            if (level === "error") {
+                elStatus.className = "text-sm text-rose-300";
+                return;
+            }
+            if (level === "success") {
+                elStatus.className = "text-sm text-emerald-300";
+                return;
+            }
+            elStatus.className = "text-sm text-white/70";
+        }
+
+        function parseNumberInRange(rawValue, minimum, maximum, label) {
+            const parsed = Number.parseInt(String(rawValue ?? "").trim(), 10);
+            if (!Number.isFinite(parsed)) {
+                throw new Error(`${label}: valeur numerique requise.`);
+            }
+            if (parsed < minimum || parsed > maximum) {
+                throw new Error(`${label}: valeur autorisee ${minimum} a ${maximum}.`);
+            }
+            return parsed;
+        }
+
+        function extractApiErrorMessage(data, fallbackMessage) {
+            if (data && typeof data === "object") {
+                const code = String(data.errorCode || data.error || "").trim();
+                if (code && API_ERROR_MESSAGES[code]) {
+                    return API_ERROR_MESSAGES[code];
+                }
+                if (typeof data.errorMessage === "string" && data.errorMessage.trim()) {
+                    return data.errorMessage.trim();
+                }
+                if (typeof data.error === "string" && data.error.trim()) {
+                    return data.error.trim();
+                }
+            }
+            return fallbackMessage;
+        }
+
+        async function runSafe(task, contextLabel) {
+            try {
+                await task();
+            } catch (error) {
+                const msg = (error && error.message) ? error.message : String(error);
+                setStatus(`${contextLabel}: ${msg}`, "error");
+            }
+        }
+
+        function clampOffset(value) {
+            const parsed = parseInt(value, 10);
+            if (Number.isNaN(parsed)) return 0;
+            return Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, parsed));
+        }
+
+        function readIslandVisibility() {
+            const out = {};
+            for (const conf of ISLAND_VISIBILITY_INPUTS) {
+                out[conf.key] = !!document.getElementById(conf.id).checked;
+            }
+            return out;
+        }
+
+        function readLayoutOffsets() {
+            const out = {};
+            for (const conf of LAYOUT_OFFSET_INPUTS) {
+                out[conf.key] = {
+                    x: clampOffset(document.getElementById(conf.xId).value),
+                    y: clampOffset(document.getElementById(conf.yId).value)
+                };
+            }
+            return out;
+        }
+
         async function getState() {
             const res = await fetch("/api/state", { cache: "no-cache" });
             if (!res.ok) throw new Error("HTTP " + res.status);
             state = await res.json();
+        }
+
+        async function getTerrariaState() {
+            const res = await fetch("/api/terraria", { cache: "no-cache" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            terrariaState = await res.json();
+        }
+
+        function fileOptionLabel(item) {
+            const display = (item && item.displayName) ? item.displayName : (item && item.filename) ? item.filename : "-";
+            const filename = (item && item.filename) ? item.filename : "-";
+            return `${display} (${filename})`;
+        }
+
+        function fillFileSelect(selectEl, items, selectedFile, emptyText) {
+            const rows = Array.isArray(items) ? items : [];
+            const selected = String(selectedFile || "").trim();
+            const exists = rows.some((it) => it.filename === selected);
+            const effective = exists ? selected : (rows[0] ? rows[0].filename : "");
+
+            selectEl.innerHTML = "";
+            if (!rows.length) {
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = emptyText;
+                selectEl.appendChild(option);
+                return effective;
+            }
+
+            for (const it of rows) {
+                const option = document.createElement("option");
+                option.value = it.filename;
+                option.textContent = fileOptionLabel(it);
+                selectEl.appendChild(option);
+            }
+            selectEl.value = effective;
+            return effective;
+        }
+
+        async function ensureSelectedSaveFiles() {
+            if (!state || !terrariaState) return;
+
+            const players = terrariaState.players || [];
+            const worlds = terrariaState.worlds || [];
+            const currentPlayer = String(state.selectedPlayerFile || "").trim();
+            const currentWorld = String(state.selectedWorldFile || "").trim();
+
+            const patch = {};
+            if (players.length && !players.some((p) => p.filename === currentPlayer)) {
+                patch.selectedPlayerFile = players[0].filename;
+            }
+            if (worlds.length && !worlds.some((w) => w.filename === currentWorld)) {
+                patch.selectedWorldFile = worlds[0].filename;
+            }
+
+            if (Object.keys(patch).length) {
+                await patchState(patch);
+            }
         }
 
         async function patchState(patch) {
@@ -269,12 +526,25 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(patch)
             });
-            const data = await res.json();
-            if (!res.ok || data.error) {
-                throw new Error(data.error || ("HTTP " + res.status));
+            const contentType = String(res.headers.get("Content-Type") || "").toLowerCase();
+            let data = {};
+            if (contentType.includes("application/json")) {
+                try {
+                    data = await res.json();
+                } catch {
+                    data = {};
+                }
+            }
+
+            if (!res.ok) {
+                const fallback = `HTTP ${res.status}`;
+                throw new Error(extractApiErrorMessage(data, fallback));
+            }
+            if (data && data.error) {
+                throw new Error(extractApiErrorMessage(data, "Erreur API"));
             }
             state = data;
-            elStatus.textContent = "Sauvegarde OK";
+            setStatus("Sauvegarde OK", "success");
         }
 
         function filteredList(list, doneMap, searchValue, filterValue) {
@@ -304,7 +574,9 @@
                     <div class="font-bold">${displayName(it)}</div>
                 `;
                 const cb = row.querySelector("input");
-                cb.addEventListener("change", () => onChange(it.slug, cb.checked));
+                cb.addEventListener("change", () => {
+                    void runSafe(() => onChange(it.slug, cb.checked), "Mise a jour checklist");
+                });
                 container.appendChild(row);
             }
 
@@ -320,7 +592,6 @@
             if (configDirty) return;
             document.getElementById("label").value = state.label || "";
             document.getElementById("goal").value = state.goal || "";
-            document.getElementById("worldName").value = state.worldName || "";
             document.getElementById("seed").value = state.seed || "";
             document.getElementById("scrollSeconds").value = String(state.scrollSeconds ?? 22);
             document.getElementById("cycleSeconds").value = String(state.cycleSeconds ?? 10);
@@ -329,6 +600,24 @@
             document.getElementById("showLastBossNotif").checked = state.showLastBossNotif !== false;
             document.getElementById("marqueeModeLock").value = state.marqueeModeLock || "auto";
             document.getElementById("language").value = state.language || "fr";
+            document.getElementById("antiSpoilCarousel").checked = !!state.antiSpoilCarousel;
+            document.getElementById("syncRunTimerWithSave").checked = state.syncRunTimerWithSave !== false;
+            document.getElementById("layoutEditMode").checked = !!state.layoutEditMode;
+
+            const vis = state.islandVisibility || {};
+            for (const conf of ISLAND_VISIBILITY_INPUTS) {
+                document.getElementById(conf.id).checked = vis[conf.key] !== false;
+            }
+
+            const offsets = state.layoutOffsets || {};
+            for (const conf of LAYOUT_OFFSET_INPUTS) {
+                const item = offsets[conf.key] || {};
+                document.getElementById(conf.xId).value = String(Number.isFinite(item.x) ? item.x : 0);
+                document.getElementById(conf.yId).value = String(Number.isFinite(item.y) ? item.y : 0);
+            }
+
+            fillFileSelect(elPlayerFile, terrariaState?.players || [], state.selectedPlayerFile, "Aucun perso detecte");
+            fillFileSelect(elWorldFile, terrariaState?.worlds || [], state.selectedWorldFile, "Aucun monde detecte");
         }
 
         function render() {
@@ -349,18 +638,43 @@
         }
 
         async function saveConfig() {
+            const scrollSeconds = parseNumberInRange(
+                document.getElementById("scrollSeconds").value,
+                LIMITS.scrollMin,
+                LIMITS.scrollMax,
+                "Defilement"
+            );
+            const cycleSeconds = parseNumberInRange(
+                document.getElementById("cycleSeconds").value,
+                LIMITS.cycleMin,
+                LIMITS.cycleMax,
+                "Cycle auto"
+            );
+            const uiRightGutter = parseNumberInRange(
+                document.getElementById("uiRightGutter").value,
+                LIMITS.gutterMin,
+                LIMITS.gutterMax,
+                "UI droite"
+            );
+
             await patchState({
                 label: document.getElementById("label").value,
                 goal: document.getElementById("goal").value,
-                worldName: document.getElementById("worldName").value,
                 seed: document.getElementById("seed").value,
+                selectedPlayerFile: elPlayerFile.value || "",
+                selectedWorldFile: elWorldFile.value || "",
                 language: document.getElementById("language").value,
-                scrollSeconds: parseInt(document.getElementById("scrollSeconds").value, 10) || 22,
-                cycleSeconds: parseInt(document.getElementById("cycleSeconds").value, 10) || 10,
-                uiRightGutter: parseInt(document.getElementById("uiRightGutter").value, 10) || 320,
+                scrollSeconds,
+                cycleSeconds,
+                uiRightGutter,
                 focusNextBoss: document.getElementById("focusNextBoss").checked,
                 showLastBossNotif: document.getElementById("showLastBossNotif").checked,
-                marqueeModeLock: document.getElementById("marqueeModeLock").value
+                marqueeModeLock: document.getElementById("marqueeModeLock").value,
+                antiSpoilCarousel: document.getElementById("antiSpoilCarousel").checked,
+                syncRunTimerWithSave: document.getElementById("syncRunTimerWithSave").checked,
+                layoutEditMode: document.getElementById("layoutEditMode").checked,
+                islandVisibility: readIslandVisibility(),
+                layoutOffsets: readLayoutOffsets()
             });
             configDirty = false;
             render();
@@ -389,9 +703,9 @@
                 doneNpc: {},
                 goal: "",
                 timerCmd: "reset",
-                deathsOp: "reset",
                 marqueeModeLock: "auto",
-                focusNextBoss: false
+                focusNextBoss: false,
+                antiSpoilCarousel: false
             });
             configDirty = false;
             render();
@@ -414,8 +728,9 @@
 
             const patch = {};
             const keys = [
-                "label", "goal", "worldName", "seed", "scrollSeconds", "cycleSeconds",
+                "label", "goal", "seed", "selectedPlayerFile", "selectedWorldFile", "scrollSeconds", "cycleSeconds",
                 "uiRightGutter", "language", "focusNextBoss", "marqueeModeLock", "showLastBossNotif",
+                "antiSpoilCarousel", "syncRunTimerWithSave", "layoutEditMode", "islandVisibility", "layoutOffsets",
                 "doneBoss", "doneNpc"
             ];
             for (const k of keys) {
@@ -430,16 +745,15 @@
             return tag === "input" || tag === "textarea" || tag === "select";
         }
 
-        document.getElementById("saveBtn").addEventListener("click", saveConfig);
-        document.getElementById("resetBoss").addEventListener("click", async () => { await patchState({ doneBoss: {} }); render(); });
-        document.getElementById("resetNpc").addEventListener("click", async () => { await patchState({ doneNpc: {} }); render(); });
-        document.getElementById("quickPreHard").addEventListener("click", quickPreHardmode);
-        document.getElementById("quickHardmode").addEventListener("click", quickHardmodeStart);
-        document.getElementById("quickReset").addEventListener("click", quickResetRun);
-        document.getElementById("timerStart").addEventListener("click", async () => { await patchState({ timerCmd: "start" }); render(); });
-        document.getElementById("timerPause").addEventListener("click", async () => { await patchState({ timerCmd: "pause" }); render(); });
-        document.getElementById("timerReset").addEventListener("click", async () => { await patchState({ timerCmd: "reset" }); render(); });
-        document.getElementById("deathIncBtn").addEventListener("click", async () => { await patchState({ deathsOp: "inc" }); render(); });
+        document.getElementById("saveBtn").addEventListener("click", () => runSafe(saveConfig, "Sauvegarde"));
+        document.getElementById("resetBoss").addEventListener("click", () => runSafe(async () => { await patchState({ doneBoss: {} }); render(); }, "Reset boss"));
+        document.getElementById("resetNpc").addEventListener("click", () => runSafe(async () => { await patchState({ doneNpc: {} }); render(); }, "Reset NPC"));
+        document.getElementById("quickPreHard").addEventListener("click", () => runSafe(quickPreHardmode, "Action pre-hardmode"));
+        document.getElementById("quickHardmode").addEventListener("click", () => runSafe(quickHardmodeStart, "Action hardmode"));
+        document.getElementById("quickReset").addEventListener("click", () => runSafe(quickResetRun, "Reset run"));
+        document.getElementById("timerStart").addEventListener("click", () => runSafe(async () => { await patchState({ timerCmd: "start" }); render(); }, "Timer start"));
+        document.getElementById("timerPause").addEventListener("click", () => runSafe(async () => { await patchState({ timerCmd: "pause" }); render(); }, "Timer pause"));
+        document.getElementById("timerReset").addEventListener("click", () => runSafe(async () => { await patchState({ timerCmd: "reset" }); render(); }, "Timer reset"));
         document.getElementById("exportBtn").addEventListener("click", exportState);
         document.getElementById("importBtn").addEventListener("click", () => elImportFile.click());
 
@@ -447,9 +761,9 @@
             if (!elImportFile.files || !elImportFile.files.length) return;
             try {
                 await importStateFromFile(elImportFile.files[0]);
-                elStatus.textContent = "Import OK";
+                setStatus("Import OK", "success");
             } catch (e) {
-                elStatus.textContent = "Import erreur: " + (e.message || e);
+                setStatus("Import erreur: " + (e.message || e), "error");
             } finally {
                 elImportFile.value = "";
             }
@@ -460,8 +774,23 @@
             document.getElementById(id).addEventListener("change", render);
         });
 
-        ["focusNextBoss", "showLastBossNotif", "marqueeModeLock", "language"].forEach((id) => {
-            document.getElementById(id).addEventListener("change", saveConfig);
+        ["focusNextBoss", "showLastBossNotif", "marqueeModeLock", "language", "antiSpoilCarousel", "syncRunTimerWithSave", "layoutEditMode"].forEach((id) => {
+            document.getElementById(id).addEventListener("change", () => runSafe(saveConfig, "Sauvegarde"));
+        });
+
+        ISLAND_VISIBILITY_INPUTS.forEach((conf) => {
+            document.getElementById(conf.id).addEventListener("change", () => runSafe(saveConfig, "Sauvegarde visibilite"));
+        });
+
+        LAYOUT_OFFSET_INPUTS.forEach((conf) => {
+            document.getElementById(conf.xId).addEventListener("change", () => runSafe(saveConfig, "Sauvegarde offsets"));
+            document.getElementById(conf.yId).addEventListener("change", () => runSafe(saveConfig, "Sauvegarde offsets"));
+            document.getElementById(conf.xId).addEventListener("input", () => { configDirty = true; });
+            document.getElementById(conf.yId).addEventListener("input", () => { configDirty = true; });
+        });
+
+        ["selectedPlayerFile", "selectedWorldFile"].forEach((id) => {
+            document.getElementById(id).addEventListener("change", () => runSafe(saveConfig, "Sauvegarde selection fichiers"));
         });
 
         CONFIG_INPUT_IDS.forEach((id) => {
@@ -470,41 +799,69 @@
             });
         });
 
+        document.getElementById("resetLayoutBtn").addEventListener("click", () => runSafe(async () => {
+            await patchState({
+                layoutOffsets: {
+                    marqueeBar: { x: 0, y: 0 },
+                    webcamBox: { x: 0, y: 0 },
+                    sessionCard: { x: 0, y: 0 },
+                    bottomWrap: { x: 0, y: 0 }
+                }
+            });
+            configDirty = false;
+            render();
+        }, "Reset layout"));
+
         document.addEventListener("keydown", async (e) => {
             if (isFormTarget(e.target)) return;
             if (e.key === "F1") {
                 e.preventDefault();
-                const current = state.marqueeModeLock || "auto";
-                const next = current === "boss" ? "npc" : "boss";
-                await patchState({ marqueeModeLock: next });
-                render();
+                await runSafe(async () => {
+                    const current = state.marqueeModeLock || "auto";
+                    const next = current === "boss" ? "npc" : "boss";
+                    await patchState({ marqueeModeLock: next });
+                    render();
+                }, "Hotkey F1");
             } else if (e.key === "F2") {
                 e.preventDefault();
-                await patchState({ focusNextBoss: !state.focusNextBoss });
-                render();
-            } else if (e.key === "F3") {
-                e.preventDefault();
-                await patchState({ deathsOp: "inc" });
-                render();
+                await runSafe(async () => {
+                    await patchState({ focusNextBoss: !state.focusNextBoss });
+                    render();
+                }, "Hotkey F2");
             }
+        });
+
+        window.addEventListener("unhandledrejection", (event) => {
+            const reason = event && event.reason;
+            const msg = (reason && reason.message) ? reason.message : String(reason || "Erreur inconnue");
+            setStatus("Erreur non geree: " + msg, "error");
+        });
+
+        window.addEventListener("error", (event) => {
+            const msg = (event && event.message) ? event.message : "Erreur JavaScript";
+            setStatus("Erreur UI: " + msg, "error");
         });
 
         (async () => {
             try {
                 await getState();
+                await getTerrariaState();
+                await ensureSelectedSaveFiles();
                 render();
-                elStatus.textContent = "Pret";
+                setStatus("Pret", "success");
             } catch (e) {
-                elStatus.textContent = "Erreur init: " + (e.message || e);
+                setStatus("Erreur init: " + (e.message || e), "error");
             }
             setInterval(async () => {
                 try {
                     await getState();
+                    await getTerrariaState();
+                    await ensureSelectedSaveFiles();
                     render();
                 } catch {
                     // keep current UI
                 }
-            }, 1000);
+            }, 1500);
         })();
     </script>
 </body>

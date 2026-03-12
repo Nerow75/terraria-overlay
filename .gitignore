@@ -1,5 +1,20 @@
+# Ignore Python bytecode and cache files
 __pycache__/
-*.pyc
-state.json
-deaths.txt
-*.tmp
+*.py[cod]
+
+# Ignore build artifacts
+build/
+dist/
+*.spec
+
+# Ignore logs
+*.log
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.iml
+
+# Ignore system files
+.DS_Store
+Thumbs.db
