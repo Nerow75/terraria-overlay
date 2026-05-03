@@ -1,11 +1,13 @@
 import json
 import logging
 import os
+import sys
 import threading
 import time
 from collections import defaultdict, deque
 from copy import deepcopy
 from email.utils import formatdate, parsedate_to_datetime
+from functools import partial
 from hashlib import sha1
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlsplit
@@ -15,12 +17,24 @@ from terraria_parser import get_player_data, get_world_data
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("OVERLAY_PORT", "8787"))
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.environ.get("OVERLAY_DATA_DIR", BASE_DIR)
+CODE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, "frozen", False):
+    BUNDLE_DIR = os.path.abspath(getattr(sys, "_MEIPASS", CODE_DIR))
+    APP_ROOT = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    BUNDLE_DIR = os.path.dirname(CODE_DIR)
+    APP_ROOT = BUNDLE_DIR
+
+WEB_DIR = os.path.join(BUNDLE_DIR, "web")
+if not os.path.isdir(WEB_DIR):
+    WEB_DIR = BUNDLE_DIR
+
+BASE_DIR = APP_ROOT
+DATA_DIR = os.environ.get("OVERLAY_DATA_DIR", os.path.join(APP_ROOT, "data"))
 try:
     os.makedirs(DATA_DIR, exist_ok=True)
 except OSError:
-    DATA_DIR = BASE_DIR
+    DATA_DIR = APP_ROOT
 STATE_PATH = os.path.join(DATA_DIR, "state.json")
 DEATHS_PATH = os.path.join(DATA_DIR, "deaths.txt")
 LOG_PATH = os.path.join(DATA_DIR, "server.log")
@@ -109,6 +123,7 @@ STATE_LOCK = threading.Lock()
 RATE_WINDOW_SECONDS = 2.0
 RATE_MAX_REQUESTS = 25
 REQUEST_LOG = defaultdict(deque)
+MAX_REQUEST_BODY_BYTES = 32 * 1024
 
 _last_deaths_read = 0.0
 _last_deaths_val = "-"
@@ -154,6 +169,7 @@ ERROR_MESSAGES = {
     "content_type_must_be_application_json": "Le type de contenu doit etre application/json.",
     "invalid_json": "Le JSON envoye est invalide.",
     "patch_must_be_object": "Le patch JSON doit etre un objet.",
+    "payload_too_large": "La requete est trop volumineuse pour cette API locale.",
     "invalid_language": "Langue invalide. Valeurs autorisees: fr, en.",
     "invalid_scroll_seconds": "Scroll invalide. Valeurs autorisees: 10 a 120.",
     "invalid_cycle_seconds": "Cycle invalide. Valeurs autorisees: 4 a 120.",
@@ -639,6 +655,15 @@ def parse_http_date(value: str):
         return None
 
 
+def drain_request_body(stream, total_bytes: int) -> None:
+    remaining = max(0, int(total_bytes))
+    while remaining > 0:
+        chunk = stream.read(min(remaining, 8192))
+        if not chunk:
+            break
+        remaining -= len(chunk)
+
+
 def _safe_display_name(value, fallback: str) -> str:
     txt = str(value or "").replace("\x00", " ").strip()
     txt = " ".join(txt.split())
@@ -782,6 +807,9 @@ def perform_boot_sync():
 
 
 class Handler(SimpleHTTPRequestHandler):
+    server_version = "TerrariaOverlay/1.0"
+    sys_version = ""
+
     def log_message(self, fmt: str, *args):
         # Logs HTTP standards in structured format.
         try:
@@ -823,7 +851,20 @@ class Handler(SimpleHTTPRequestHandler):
         payload = api_error_payload(error_code, detail)
         self._send_json(payload, code=http_code, extra_headers=extra_headers)
 
+    def _send_redirect(self, location: str):
+        self.send_response(302)
+        self.send_header("Location", location)
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+
+    def list_directory(self, path):
+        self.send_error(404)
+        return None
+
     def do_GET(self):
+        if self._path() == "/":
+            self._send_redirect("/control.html")
+            return
         if self._path() == "/api/state":
             payload = build_public_state()
             etag = etag_for_payload(payload)
@@ -891,6 +932,19 @@ class Handler(SimpleHTTPRequestHandler):
 
             try:
                 length = int(self.headers.get("Content-Length", "0"))
+                if length < 0:
+                    raise ValueError("negative content length")
+                if length > MAX_REQUEST_BODY_BYTES:
+                    drain_request_body(self.rfile, length)
+                    log_event(
+                        "api_state_payload_too_large",
+                        level="warning",
+                        client_ip=client_ip,
+                        content_length=length,
+                        max_bytes=MAX_REQUEST_BODY_BYTES,
+                    )
+                    self._send_api_error("payload_too_large", http_code=413)
+                    return
                 body = self.rfile.read(length) if length > 0 else b"{}"
                 patch = json.loads(body.decode("utf-8"))
                 cleaned, timer_cmd, deaths_op = validate_patch_input(patch)
@@ -994,18 +1048,23 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
 
 
+def create_http_server(port: int):
+    return ThreadingHTTPServer((HOST, port), partial(Handler, directory=WEB_DIR))
+
+
 if __name__ == "__main__":
-    os.chdir(BASE_DIR)
     perform_boot_sync()
     log_event(
         "server_starting",
         host=HOST,
         port=PORT,
-        base_dir=BASE_DIR,
+        app_root=APP_ROOT,
+        code_dir=CODE_DIR,
+        web_dir=WEB_DIR,
         data_dir=DATA_DIR,
         players_path=TERRARIA_PLAYERS_PATH,
         worlds_path=TERRARIA_WORLDS_PATH,
     )
-    httpd = ThreadingHTTPServer((HOST, PORT), Handler)
+    httpd = create_http_server(PORT)
     print(f"Server running on http://{HOST}:{PORT}")
     httpd.serve_forever()

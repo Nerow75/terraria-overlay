@@ -1,6 +1,16 @@
 $ErrorActionPreference = "Stop"
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectRoot = Split-Path -Parent $ScriptDir
+$SpecPath = Join-Path $ScriptDir "overlay_launcher.spec"
+
+Set-Location $ProjectRoot
 
 Write-Host "Build terraria_overlay.exe..." -ForegroundColor Cyan
+
+if (!(Test-Path -LiteralPath $SpecPath)) {
+  Write-Host "overlay_launcher.spec introuvable." -ForegroundColor Red
+  exit 1
+}
 
 $candidates = @(
     @{ exe = "python"; args = @("-m", "PyInstaller") },
@@ -29,5 +39,5 @@ if (-not $selected) {
     exit 1
 }
 
-& $selected.exe @($selected.args + @("--clean", "--noconfirm", "overlay_launcher.spec"))
+& $selected.exe @($selected.args + @("--clean", "--noconfirm", $SpecPath))
 exit $LASTEXITCODE

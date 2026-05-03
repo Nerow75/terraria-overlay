@@ -1,8 +1,8 @@
 ﻿# ==========================================
 # Terraria Overlay Starter (API server + Sync deaths)
 # - Ask Terraria character name
-# - Mirror tModLoader Death Counter file -> ./deaths.txt (1/sec)
-# - Start server.py on a safe port
+# - Mirror tModLoader Death Counter file -> ./data/deaths.txt (1/sec)
+# - Start src/server.py on a safe port
 # - Open control + overlay
 # ==========================================
 
@@ -16,9 +16,12 @@ Write-Host ""
 Write-Host "=== Terraria Overlay Starter ===" -ForegroundColor Green
 Write-Host ""
 
-# Folder served = folder of this script
-$OverlayDir = $PSScriptRoot
-if ([string]::IsNullOrWhiteSpace($OverlayDir)) { $OverlayDir = (Get-Location).Path }
+# Project folders
+$ScriptsDir = $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ScriptsDir)) { $ScriptsDir = (Get-Location).Path }
+$ProjectRoot = Split-Path -Parent $ScriptsDir
+$DataDir = Join-Path $ProjectRoot "data"
+New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 
 # Ask player name
 $playerName = Read-Host "Nom EXACT du personnage Terraria (ex: Elias)"
@@ -26,17 +29,17 @@ if ([string]::IsNullOrWhiteSpace($playerName)) { Err "Nom du personnage vide."; 
 
 $documentsDir = [Environment]::GetFolderPath("MyDocuments")
 $deathSource = Join-Path $documentsDir "My Games\Terraria\tModLoader\Death Counter\$playerName.txt"
-$deathDest   = Join-Path $OverlayDir "deaths.txt"
+$deathDest   = Join-Path $DataDir "deaths.txt"
 $deathSyncEnabled = $true
 
 # Required files
-$serverPy    = Join-Path $OverlayDir "server.py"
-$overlayHtml = Join-Path $OverlayDir "overlay.html"
-$controlHtml = Join-Path $OverlayDir "control.html"
+$serverPy    = Join-Path $ProjectRoot "src\server.py"
+$overlayHtml = Join-Path $ProjectRoot "web\overlay.html"
+$controlHtml = Join-Path $ProjectRoot "web\control.html"
 
-if (!(Test-Path $serverPy))    { Err "server.py introuvable dans $OverlayDir"; exit 1 }
-if (!(Test-Path $overlayHtml)) { Err "overlay.html introuvable dans $OverlayDir"; exit 1 }
-if (!(Test-Path $controlHtml)) { Err "control.html introuvable dans $OverlayDir"; exit 1 }
+if (!(Test-Path $serverPy))    { Err "server.py introuvable dans $ProjectRoot\\src"; exit 1 }
+if (!(Test-Path $overlayHtml)) { Err "overlay.html introuvable dans $ProjectRoot\\web"; exit 1 }
+if (!(Test-Path $controlHtml)) { Err "control.html introuvable dans $ProjectRoot\\web"; exit 1 }
 
 # Python check
 $python = $null
@@ -68,13 +71,14 @@ try {
   exit 1
 }
 
-Info "OverlayDir  : $OverlayDir"
+Info "ProjectRoot : $ProjectRoot"
+Info "DataDir     : $DataDir"
 Info "DeathSource : $deathSource"
 Info "DeathDest   : $deathDest"
 Write-Host ""
 
 if (!(Test-Path -Path $deathSource)) {
-  Warn "Death Counter introuvable au dÃ©marrage. Sync dÃ©sactivÃ©e, overlay utilisable sans ce mode."
+  Warn "Death Counter introuvable au demarrage. Sync desactivee, overlay utilisable sans ce mode."
   $deathSyncEnabled = $false
   try {
     Set-Content -Path $deathDest -Value "-" -NoNewline -Encoding UTF8
@@ -83,13 +87,13 @@ if (!(Test-Path -Path $deathSource)) {
   }
 }
 
-# Choose a safe port (8080 was blocked on your PC)
+# Choose a safe local port.
 $portsToTry = @(8787, 18080, 5500, 3000, 8888, 9000)
 
 $serverProc = $null
 $portUsed   = $null
-$serverOutLog = Join-Path $OverlayDir "server.stdout.log"
-$serverErrLog = Join-Path $OverlayDir "server.stderr.log"
+$serverOutLog = Join-Path $DataDir "server.stdout.log"
+$serverErrLog = Join-Path $DataDir "server.stderr.log"
 
 try { if (Test-Path $serverOutLog) { Remove-Item $serverOutLog -Force } } catch {}
 try { if (Test-Path $serverErrLog) { Remove-Item $serverErrLog -Force } } catch {}
@@ -98,6 +102,7 @@ foreach ($p in $portsToTry) {
   try {
     Info "Tentative demarrage server.py sur port $p..."
     $env:OVERLAY_PORT = "$p"
+    $env:OVERLAY_DATA_DIR = $DataDir
 
     $pythonArgs = @()
     $pythonArgs += $pythonArgsPrefix
@@ -106,7 +111,8 @@ foreach ($p in $portsToTry) {
     $serverProc = Start-Process -PassThru `
       -FilePath $pythonExe `
       -ArgumentList $pythonArgs `
-      -WorkingDirectory $OverlayDir `
+      -WorkingDirectory $ProjectRoot `
+      -WindowStyle Hidden `
       -RedirectStandardOutput $serverOutLog `
       -RedirectStandardError $serverErrLog
 
@@ -176,7 +182,7 @@ Start-Process $controlUrl | Out-Null
 Start-Process $overlayUrl | Out-Null
 
 if ($deathSyncEnabled) {
-  Info "Sync du Death Counter -> deaths.txt (1/sec). CTRL+C pour arrêter."
+  Info "Sync du Death Counter -> data\\deaths.txt (1/sec). CTRL+C pour arrêter."
 } else {
   Info "Mode sans Death Counter actif. CTRL+C pour arrêter."
 }
@@ -211,7 +217,7 @@ try {
 }
 finally {
   if ($serverProc -and !$serverProc.HasExited) {
-    Info "ArrÃªt serveur..."
+    Info "Arret serveur..."
     try { Stop-Process -Id $serverProc.Id -Force } catch {}
   }
 }

@@ -349,8 +349,12 @@ def format_playtime(milliseconds: int) -> str:
 
 
 if __name__ == "__main__":
-    players_path = r"C:\Users\Admin\Documents\My Games\Terraria\Players"
-    worlds_path = r"C:\Users\Admin\Documents\My Games\Terraria\Worlds"
+    terraria_root = os.environ.get(
+        "TERRARIA_ROOT",
+        os.path.join(os.path.expanduser("~"), "Documents", "My Games", "Terraria"),
+    )
+    players_path = os.environ.get("TERRARIA_PLAYERS_PATH", os.path.join(terraria_root, "Players"))
+    worlds_path = os.environ.get("TERRARIA_WORLDS_PATH", os.path.join(terraria_root, "Worlds"))
 
     if os.path.exists(players_path):
         players = [f for f in os.listdir(players_path) if f.endswith(".plr")]

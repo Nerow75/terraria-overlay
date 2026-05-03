@@ -1,14 +1,32 @@
 # Ignore Python bytecode and cache files
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
 
 # Ignore build artifacts
 build/
 dist/
 *.spec
+!scripts/overlay_launcher.spec
 
 # Ignore logs
 *.log
+
+# Ignore local runtime data
+state.json
+deaths.txt
+*.tmp
+data/*
+!data/.gitkeep
+
+# Ignore local environment files
+.env
+.env.*
 
 # Ignore IDE and editor files
 .vscode/

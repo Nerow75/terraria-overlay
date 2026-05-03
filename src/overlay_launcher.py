@@ -8,6 +8,23 @@ import time
 import urllib.request
 import webbrowser
 
+
+def configure_data_dir_env() -> None:
+    # Regle: le dossier de persistance doit etre decide avant l'import de server.py.
+    # Sinon, en mode PyInstaller onefile, state/deaths/log partent dans le dossier temporaire.
+    if os.environ.get("OVERLAY_DATA_DIR"):
+        return
+
+    if getattr(sys, "frozen", False):
+        os.environ["OVERLAY_DATA_DIR"] = os.path.join(os.path.dirname(os.path.abspath(sys.executable)), "data")
+        return
+
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.environ["OVERLAY_DATA_DIR"] = os.path.join(project_root, "data")
+
+
+configure_data_dir_env()
+
 import server
 
 PORT_CANDIDATES = (8787, 18080, 5500, 3000, 8888, 9000)
@@ -21,22 +38,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def configure_data_dir() -> None:
-    # En binaire PyInstaller onefile, __file__ peut pointer vers un dossier temporaire.
-    # On force donc la persistance de state/deaths a cote de l'executable.
-    if os.environ.get("OVERLAY_DATA_DIR"):
-        return
-
-    if getattr(sys, "frozen", False):
-        os.environ["OVERLAY_DATA_DIR"] = os.path.dirname(os.path.abspath(sys.executable))
-        return
-
-    os.environ["OVERLAY_DATA_DIR"] = server.BASE_DIR
-
-
 def try_create_server(port: int):
     try:
-        return server.ThreadingHTTPServer((server.HOST, port), server.Handler)
+        return server.create_http_server(port)
     except OSError:
         return None
 
@@ -72,9 +76,8 @@ def serve_forever(httpd, stop_event: threading.Event) -> None:
 
 def main() -> int:
     args = parse_args()
-    configure_data_dir()
 
-    os.chdir(server.BASE_DIR)
+    os.chdir(server.APP_ROOT)
     server.perform_boot_sync()
 
     httpd, selected_port = pick_httpd(args.port)
