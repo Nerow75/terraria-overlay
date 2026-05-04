@@ -4,6 +4,16 @@ Overlay local pour stream Terraria avec une page de controle OBS et une page d'a
 
 Le projet est concu pour un usage solo en local, sans base de donnees ni service tiers.
 
+## Apercus
+
+### Control
+
+![Control UI](docs/control-ui.png)
+
+### Overlay
+
+![Overlay UI](docs/overlay-ui.png)
+
 ## Structure
 
 ```text
